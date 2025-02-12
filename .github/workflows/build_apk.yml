@@ -1,7 +1,10 @@
-name: detekt code smell analysis + run unit tests + build & upload apk
+name: Android CI Pipeline
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
