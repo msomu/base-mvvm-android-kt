@@ -15,11 +15,6 @@ import com.msomu.androidkt.presentation.NavRoutes.HOME
 import com.msomu.androidkt.presentation.ui.screen.DetailScreen
 import com.msomu.androidkt.presentation.ui.screen.HomeScreen
 
-object NavRoutes {
-    const val HOME = "home"
-    const val DETAIL = "detail"
-}
-
 @Composable
 fun App() {
     val navController = rememberNavController()

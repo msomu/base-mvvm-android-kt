@@ -12,12 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class DetailUiState {
-    data class Success(val todoItem: TodoItem) : DetailUiState()
-    data class Error(val message: String) : DetailUiState()
-    data object Loading : DetailUiState()
-}
-
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     private val repository: Repository
@@ -37,4 +31,10 @@ class DetailViewModel @Inject constructor(
             }
         }
     }
+}
+
+sealed class DetailUiState {
+    data class Success(val todoItem: TodoItem) : DetailUiState()
+    data class Error(val message: String) : DetailUiState()
+    data object Loading : DetailUiState()
 }

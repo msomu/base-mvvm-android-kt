@@ -12,12 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class HomeUiState {
-    data class Success(val todoItems: List<TodoItem>) : HomeUiState()
-    data class Error(val message: String) : HomeUiState()
-    data object Loading : HomeUiState()
-}
-
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: Repository
@@ -41,4 +35,10 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+}
+
+sealed class HomeUiState {
+    data class Success(val todoItems: List<TodoItem>) : HomeUiState()
+    data class Error(val message: String) : HomeUiState()
+    data object Loading : HomeUiState()
 }
