@@ -1,4 +1,4 @@
-package com.msomu.androidkt.ui.theme
+package com.msomu.androidkt.presentation.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

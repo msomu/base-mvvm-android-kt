@@ -1,4 +1,4 @@
-package com.msomu.androidkt.ui.theme
+package com.msomu.androidkt.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
