@@ -51,7 +51,7 @@ fun DetailScreen(
     todoItemId: Int,
     modifier: Modifier = Modifier,
     viewModel: DetailViewModel = hiltViewModel(),
-    onNavigateBack : () -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     LaunchedEffect(todoItemId) {
         viewModel.fetchTodo(todoItemId)
@@ -98,7 +98,10 @@ fun DetailScreen(
 }
 
 @Composable
-internal fun DetailScreen(modifier: Modifier = Modifier, todo: TodoItem) {
+internal fun DetailScreen(
+    modifier: Modifier = Modifier,
+    todo: TodoItem
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
