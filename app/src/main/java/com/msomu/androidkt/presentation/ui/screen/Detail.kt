@@ -107,105 +107,121 @@ internal fun DetailScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ShimmerCircleImage(
-                        imageUrl = todo.userImage ?: "",
-                        modifier = Modifier
-                            .width(42.dp)
-                            .aspectRatio(1f)
-                    )
-                    Text(
-                        text = todo.title,
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Checkbox(
-                        checked = todo.completed,
-                        onCheckedChange = { }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Status chip
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = if (todo.completed)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier.wrapContentWidth()
-                ) {
-                    Text(
-                        text = if (todo.completed) "Completed" else "Active",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = if (todo.completed)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-        }
-
+        TodoHeaderCard(todo)
         Spacer(modifier = Modifier.height(16.dp))
-
-        // Description Section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Description",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "No description provided",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        }
-
+        DescriptionCard()
         Spacer(modifier = Modifier.height(16.dp))
+        MetadataCard()
+    }
+}
 
-        // Metadata Section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Details",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+@Composable
+private fun TodoHeaderCard(todo: TodoItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            TodoHeaderContent(todo)
+            Spacer(modifier = Modifier.height(8.dp))
+            StatusChip(todo.completed)
+        }
+    }
+}
+
+@Composable
+private fun TodoHeaderContent(todo: TodoItem) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ShimmerCircleImage(
+            imageUrl = todo.userImage ?: "",
+            modifier = Modifier
+                .width(42.dp)
+                .aspectRatio(1f)
+        )
+        Text(
+            text = todo.title,
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Checkbox(
+            checked = todo.completed,
+            onCheckedChange = { }
+        )
+    }
+}
+
+@Composable
+private fun StatusChip(completed: Boolean) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = if (completed)
+            MaterialTheme.colorScheme.primaryContainer
+        else
+            MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.wrapContentWidth()
+    ) {
+        Text(
+            text = if (completed) "Completed" else "Active",
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            color = if (completed)
+                MaterialTheme.colorScheme.onPrimaryContainer
+            else
+                MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Composable
+private fun DescriptionCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Description",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "No description provided",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun MetadataCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Details",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MetadataItem(
+                    icon = Icons.Default.DateRange,
+                    label = "Created",
+                    value = "13/02/2025"
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    MetadataItem(
-                        icon = Icons.Default.DateRange,
-                        label = "Created",
-                        value = "13/02/2025"
-                    )
-                    MetadataItem(
-                        icon = Icons.Default.Notifications,
-                        label = "Due Date",
-                        value = "16/04/2026"
-                    )
-                }
+                MetadataItem(
+                    icon = Icons.Default.Notifications,
+                    label = "Due Date",
+                    value = "16/04/2026"
+                )
             }
         }
     }
