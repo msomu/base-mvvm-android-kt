@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.msomu.androidkt.model.TodoItem
 import com.msomu.androidkt.presentation.ui.components.ShimmerCircleImage
-import com.msomu.androidkt.presentation.viewmodel.DetailViewModel
 import com.msomu.androidkt.presentation.viewmodel.DetailUiState
+import com.msomu.androidkt.presentation.viewmodel.DetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
