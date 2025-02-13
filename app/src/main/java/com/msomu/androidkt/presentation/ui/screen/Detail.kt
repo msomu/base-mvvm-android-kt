@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.msomu.androidkt.model.TodoItem
+import com.msomu.androidkt.presentation.ui.components.ShimmerCircleImage
 import com.msomu.androidkt.presentation.viewmodel.DetailViewModel
 import com.msomu.androidkt.presentation.viewmodel.DetailUiState
 
@@ -112,9 +114,15 @@ internal fun DetailScreen(modifier: Modifier = Modifier, todo: TodoItem) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    ShimmerCircleImage(
+                        imageUrl = todo.userImage ?: "",
+                        modifier = Modifier
+                            .width(42.dp)
+                            .aspectRatio(1f)
+                    )
                     Text(
                         text = todo.title,
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.headlineSmall
                     )
                     Checkbox(
                         checked = todo.completed,
