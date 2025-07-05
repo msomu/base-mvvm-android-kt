@@ -3,8 +3,8 @@
   "image": "mcr.microsoft.com/devcontainers/java:17-bookworm",
   "features": {
     "ghcr.io/NordcomInc/devcontainer-features/android-sdk:1": {
-      "platform": "35" // SDK platform version
-    ,"build_tools": "35.0.0" // SDK build-tools version
+      "platform": "35"
+    ,"build_tools": "35.0.0"
     }
   },
 
