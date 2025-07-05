@@ -1,12 +1,13 @@
 {
-  "name": "Java",
-  "image": "mcr.microsoft.com/devcontainers/java:1-21",
+  "name": "Android Dev",
+  "image": "mcr.microsoft.com/devcontainers/java:17-bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/java:1": {
-      "version": "none",
-      "installMaven": "true",
-      "mavenVersion": "3.8.6",
-      "installGradle": "true"
+    "ghcr.io/NordcomInc/devcontainer-features/android-sdk:1": {
+      "platform": "35"
+    ,"build_tools": "35.0.0"
     }
-  }
+  },
+
+  "remoteUser": "vscode"
+,"postCreateCommand": "yes | sdkmanager --licenses"
 }
