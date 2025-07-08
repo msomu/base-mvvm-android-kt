@@ -28,7 +28,7 @@ fun SingleTodoItem(
     onNavigateTodo: (Int) -> Unit
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { onNavigateTodo(todoItem.id) },
         elevation = CardDefaults.cardElevation(
