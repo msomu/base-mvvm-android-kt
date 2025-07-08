@@ -1,12 +1,11 @@
 package com.msomu.androidkt.presentation.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,17 +28,26 @@ fun SingleTodoItem(
     onNavigateTodo: (Int) -> Unit
 ) {
     Card(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp)
             .clickable { onNavigateTodo(todoItem.id) },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (todoItem.completed) 1.dp else 3.dp
+        ),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (todoItem.completed)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            else
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Checkbox(
                 checked = todoItem.completed,
@@ -50,14 +58,13 @@ fun SingleTodoItem(
                 )
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
-
             Text(
+                modifier = Modifier.weight(1f),
                 text = todoItem.title,
                 style = MaterialTheme.typography.bodyLarge,
                 textDecoration = if (todoItem.completed) TextDecoration.LineThrough else null,
                 color = if (todoItem.completed)
-                    MaterialTheme.colorScheme.outline
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 else
                     MaterialTheme.colorScheme.onSurface
             )

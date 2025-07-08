@@ -21,9 +21,7 @@ fun App() {
 
     NavHost(navController = navController, startDestination = HOME) {
         composable(HOME) {
-            HomeScreen(Modifier
-                .fillMaxSize()
-                .padding(16.dp)) {
+            HomeScreen(Modifier.fillMaxSize()) {
                 navController.navigate("$DETAIL/$it")
             }
         }
