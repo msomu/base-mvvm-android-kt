@@ -1,5 +1,8 @@
 package com.msomu.androidkt.presentation.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,15 +38,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.msomu.androidkt.model.TodoItem
+import com.msomu.androidkt.presentation.ui.animation.CardAnimation
 import com.msomu.androidkt.presentation.ui.components.ShimmerCircleImage
 import com.msomu.androidkt.presentation.viewmodel.DetailUiState
 import com.msomu.androidkt.presentation.viewmodel.DetailViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,24 +80,42 @@ fun DetailScreen(
         )
     }, modifier = modifier.fillMaxSize()) { innerPadding ->
         val uiState by viewModel.uiState.collectAsState()
-        Box(Modifier.padding(innerPadding)) {
-            when (uiState) {
+
+        Crossfade(
+            targetState = uiState,
+            animationSpec = tween(300),
+            modifier = Modifier.padding(innerPadding),
+            label = "detail_state_transition"
+        ) { state ->
+            when (state) {
                 is DetailUiState.Error -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Text((uiState as DetailUiState.Error).message)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            state.message,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
 
                 is DetailUiState.Loading -> {
-                    Box(modifier = Modifier.size(120.dp)) {
-                        CircularProgressIndicator()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp)
+                        )
                     }
                 }
 
                 is DetailUiState.Success -> {
                     DetailScreen(
                         Modifier.fillMaxSize(),
-                        todo = (uiState as DetailUiState.Success).todoItem,
+                        todo = state.todoItem,
                     )
                 }
             }
@@ -102,16 +128,44 @@ internal fun DetailScreen(
     modifier: Modifier = Modifier,
     todo: TodoItem
 ) {
+    var card1Visible by remember { mutableStateOf(false) }
+    var card2Visible by remember { mutableStateOf(false) }
+    var card3Visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        card1Visible = true
+        delay(CardAnimation.getStaggeredDelay(1).toLong())
+        card2Visible = true
+        delay(CardAnimation.getStaggeredDelay(1).toLong())
+        card3Visible = true
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        TodoHeaderCard(todo)
-        Spacer(modifier = Modifier.height(16.dp))
-        DescriptionCard()
-        Spacer(modifier = Modifier.height(16.dp))
-        MetadataCard()
+        AnimatedVisibility(
+            visible = card1Visible,
+            enter = CardAnimation.enterAnimation
+        ) {
+            TodoHeaderCard(todo)
+        }
+
+        AnimatedVisibility(
+            visible = card2Visible,
+            enter = CardAnimation.enterAnimation
+        ) {
+            DescriptionCard()
+        }
+
+        AnimatedVisibility(
+            visible = card3Visible,
+            enter = CardAnimation.enterAnimation
+        ) {
+            MetadataCard()
+        }
     }
 }
 
@@ -119,11 +173,14 @@ internal fun DetailScreen(
 private fun TodoHeaderCard(todo: TodoItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 8.dp
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             TodoHeaderContent(todo)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             StatusChip(todo.completed)
         }
     }
@@ -133,18 +190,18 @@ private fun TodoHeaderCard(todo: TodoItem) {
 private fun TodoHeaderContent(todo: TodoItem) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ShimmerCircleImage(
             imageUrl = todo.userImage ?: "",
             modifier = Modifier
-                .width(42.dp)
-                .aspectRatio(1f)
+                .size(56.dp)
         )
         Text(
             text = todo.title,
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.weight(1f)
         )
         Checkbox(
             checked = todo.completed,
@@ -165,7 +222,8 @@ private fun StatusChip(completed: Boolean) {
     ) {
         Text(
             text = if (completed) "Completed" else "Active",
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
             color = if (completed)
                 MaterialTheme.colorScheme.onPrimaryContainer
             else
@@ -178,18 +236,22 @@ private fun StatusChip(completed: Boolean) {
 private fun DescriptionCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Description",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "No description provided",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -199,28 +261,33 @@ private fun DescriptionCard() {
 private fun MetadataCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Details",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 MetadataItem(
                     icon = Icons.Default.DateRange,
                     label = "Created",
-                    value = "13/02/2025"
+                    value = "13/02/2025",
+                    modifier = Modifier.weight(1f)
                 )
                 MetadataItem(
                     icon = Icons.Default.Notifications,
                     label = "Due Date",
-                    value = "16/04/2026"
+                    value = "16/04/2026",
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -231,25 +298,39 @@ private fun MetadataCard() {
 private fun MetadataItem(
     icon: ImageVector,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Column {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
