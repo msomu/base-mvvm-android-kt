@@ -17,7 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.msomu.androidkt.model.TodoItem
 import com.msomu.androidkt.presentation.ui.components.SingleTodoItem
 import com.msomu.androidkt.presentation.viewmodel.HomeUiState
