@@ -5,6 +5,9 @@ import com.msomu.androidkt.network.ApiService
 import com.msomu.androidkt.network.ApiState
 import javax.inject.Inject
 
+// Cache duration: 5 minutes
+private const val CacheDurationMs: Long = 5L * 60L * 1000L
+
 class RepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : Repository {
@@ -15,14 +18,11 @@ class RepositoryImpl @Inject constructor(
     private val todoDetailsCache = mutableMapOf<Int, TodoItem>()
     private val detailsLastFetchTime = mutableMapOf<Int, Long>()
 
-    // Cache duration: 5 minutes
-    private val CACHE_DURATION_MS = 5 * 60 * 1000L
-
     override suspend fun getAllTodos(): ApiState<List<TodoItem>> {
         val now = System.currentTimeMillis()
 
         // Return cached data if still valid
-        if (cachedTodos != null && (now - todosLastFetchTime) < CACHE_DURATION_MS) {
+        if (cachedTodos != null && (now - todosLastFetchTime) < CacheDurationMs) {
             return ApiState.Success(cachedTodos!!)
         }
 
@@ -44,7 +44,7 @@ class RepositoryImpl @Inject constructor(
         val lastFetch = detailsLastFetchTime[todoItemId] ?: 0
 
         // Return cached data if still valid
-        if (todoDetailsCache.containsKey(todoItemId) && (now - lastFetch) < CACHE_DURATION_MS) {
+        if (todoDetailsCache.containsKey(todoItemId) && (now - lastFetch) < CacheDurationMs) {
             return ApiState.Success(todoDetailsCache[todoItemId]!!)
         }
 

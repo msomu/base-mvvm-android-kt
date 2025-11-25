@@ -16,6 +16,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object CoilModule {
 
+    private const val MEMORY_CACHE_PERCENT = 0.25
+    private const val DISK_CACHE_MAX_BYTES: Long = 50L * 1024L * 1024L // 50MB
+
     @Provides
     @Singleton
     fun provideImageLoader(
@@ -24,13 +27,13 @@ object CoilModule {
         return ImageLoader.Builder(context)
             .memoryCache {
                 MemoryCache.Builder(context)
-                    .maxSizePercent(0.25) // Use 25% of app memory for image cache
+                    .maxSizePercent(MEMORY_CACHE_PERCENT) // Use 25% of app memory for image cache
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(context.cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(50 * 1024 * 1024) // 50MB disk cache
+                    .maxSizeBytes(DISK_CACHE_MAX_BYTES) // 50MB disk cache
                     .build()
             }
             .crossfade(true)

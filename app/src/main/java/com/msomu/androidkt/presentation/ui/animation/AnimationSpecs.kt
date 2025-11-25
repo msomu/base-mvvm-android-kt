@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.ui.unit.dp
 
 /**
  * Centralized animation specifications for consistent animations throughout the app
@@ -120,6 +119,7 @@ object ListItemAnimation {
  * Animation configuration for card components
  */
 object CardAnimation {
+    private const val CARD_STAGGER_MS: Int = 100
     val enterAnimation = fadeIn(
         animationSpec = tween(
             durationMillis = AnimationSpecs.Duration.SLOW,
@@ -133,7 +133,5 @@ object CardAnimation {
         )
     )
 
-    fun getStaggeredDelay(cardIndex: Int): Int {
-        return cardIndex * 100
-    }
+    fun getStaggeredDelay(cardIndex: Int): Int = cardIndex * CARD_STAGGER_MS
 }

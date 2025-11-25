@@ -24,10 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.msomu.androidkt.model.TodoItem
 import com.msomu.androidkt.presentation.ui.animation.ListItemAnimation
+import com.msomu.androidkt.presentation.ui.animation.AnimationSpecs
 import com.msomu.androidkt.presentation.ui.components.SingleTodoItem
 import com.msomu.androidkt.presentation.ui.components.SkeletonTodoItem
 import com.msomu.androidkt.presentation.viewmodel.HomeUiState
 import com.msomu.androidkt.presentation.viewmodel.HomeViewModel
+
+private const val SkeletonItemsCount = 6
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +52,7 @@ fun HomeScreen(
 
         Crossfade(
             targetState = uiState,
-            animationSpec = tween(300),
+            animationSpec = tween(AnimationSpecs.Duration.MEDIUM),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
@@ -77,7 +80,7 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
-                        items(6) {
+                        items(SkeletonItemsCount) {
                             SkeletonTodoItem()
                         }
                     }

@@ -17,23 +17,41 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+private object SkeletonDefaults {
+    const val ALPHA_HIGH = 0.6f
+    const val ALPHA_LOW = 0.3f
+    const val SHIMMER_DISTANCE = 1000f
+    const val SHIMMER_DURATION_MS = 1200
+
+    const val TITLE_WIDTH_FRACTION = 0.7f
+    const val SUBTITLE_WIDTH_FRACTION = 0.4f
+
+    const val DETAIL_TITLE_WIDTH_FRACTION = 0.8f
+    const val DETAIL_SUBTITLE_WIDTH_FRACTION = 0.5f
+
+    const val DESCRIPTION_LINES = 3
+    const val LAST_LINE_INDEX = 2
+    const val LAST_LINE_WIDTH_FRACTION = 0.6f
+    const val FULL_WIDTH_FRACTION = 1f
+}
+
 /**
  * Skeleton loading component for todo list items
  */
 @Composable
 fun SkeletonTodoItem(modifier: Modifier = Modifier) {
     val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.6f),
-        Color.LightGray.copy(alpha = 0.3f),
-        Color.LightGray.copy(alpha = 0.6f)
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_HIGH),
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_LOW),
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_HIGH)
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
-        targetValue = 1000f,
+        targetValue = SkeletonDefaults.SHIMMER_DISTANCE,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = tween(durationMillis = SkeletonDefaults.SHIMMER_DURATION_MS, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmer"
@@ -41,7 +59,10 @@ fun SkeletonTodoItem(modifier: Modifier = Modifier) {
 
     val brush = Brush.linearGradient(
         colors = shimmerColors,
-        start = Offset(translateAnim - 1000f, translateAnim - 1000f),
+        start = Offset(
+            translateAnim - SkeletonDefaults.SHIMMER_DISTANCE,
+            translateAnim - SkeletonDefaults.SHIMMER_DISTANCE
+        ),
         end = Offset(translateAnim, translateAnim)
     )
 
@@ -74,7 +95,7 @@ fun SkeletonTodoItem(modifier: Modifier = Modifier) {
                 // Title skeleton
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.7f)
+                        .fillMaxWidth(SkeletonDefaults.TITLE_WIDTH_FRACTION)
                         .height(16.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
@@ -83,7 +104,7 @@ fun SkeletonTodoItem(modifier: Modifier = Modifier) {
                 // Subtitle skeleton
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.4f)
+                        .fillMaxWidth(SkeletonDefaults.SUBTITLE_WIDTH_FRACTION)
                         .height(12.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
@@ -109,17 +130,17 @@ fun SkeletonTodoItem(modifier: Modifier = Modifier) {
 @Composable
 fun SkeletonDetailCard(modifier: Modifier = Modifier) {
     val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.6f),
-        Color.LightGray.copy(alpha = 0.3f),
-        Color.LightGray.copy(alpha = 0.6f)
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_HIGH),
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_LOW),
+        Color.LightGray.copy(alpha = SkeletonDefaults.ALPHA_HIGH)
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
-        targetValue = 1000f,
+        targetValue = SkeletonDefaults.SHIMMER_DISTANCE,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = tween(durationMillis = SkeletonDefaults.SHIMMER_DURATION_MS, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmer"
@@ -127,7 +148,10 @@ fun SkeletonDetailCard(modifier: Modifier = Modifier) {
 
     val brush = Brush.linearGradient(
         colors = shimmerColors,
-        start = Offset(translateAnim - 1000f, translateAnim - 1000f),
+        start = Offset(
+            translateAnim - SkeletonDefaults.SHIMMER_DISTANCE,
+            translateAnim - SkeletonDefaults.SHIMMER_DISTANCE
+        ),
         end = Offset(translateAnim, translateAnim)
     )
 
@@ -161,7 +185,7 @@ fun SkeletonDetailCard(modifier: Modifier = Modifier) {
                     // Title skeleton
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
+                            .fillMaxWidth(SkeletonDefaults.DETAIL_TITLE_WIDTH_FRACTION)
                             .height(20.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(brush)
@@ -170,7 +194,7 @@ fun SkeletonDetailCard(modifier: Modifier = Modifier) {
                     // Subtitle skeleton
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.5f)
+                            .fillMaxWidth(SkeletonDefaults.DETAIL_SUBTITLE_WIDTH_FRACTION)
                             .height(14.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .background(brush)
@@ -179,10 +203,14 @@ fun SkeletonDetailCard(modifier: Modifier = Modifier) {
             }
 
             // Description lines
-            repeat(3) {
+            repeat(SkeletonDefaults.DESCRIPTION_LINES) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(if (it == 2) 0.6f else 1f)
+                        .fillMaxWidth(
+                            if (it == SkeletonDefaults.LAST_LINE_INDEX)
+                                SkeletonDefaults.LAST_LINE_WIDTH_FRACTION
+                            else SkeletonDefaults.FULL_WIDTH_FRACTION
+                        )
                         .height(14.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(brush)
