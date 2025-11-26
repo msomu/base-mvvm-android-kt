@@ -129,6 +129,8 @@ complexity:
   LongMethod:
     active: true
     threshold: 60
+    # Jetpack Compose UI functions tend to be longer; ignore annotated composables/previews
+    ignoreAnnotated: ['Composable', 'Preview']
   LongParameterList:
     active: true
     functionThreshold: 8

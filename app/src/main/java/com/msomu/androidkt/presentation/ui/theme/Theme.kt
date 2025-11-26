@@ -12,24 +12,61 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
+    onPrimary = OnPrimaryContainer,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    onSecondary = OnSecondaryContainer,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = PurpleGrey80,
+    tertiary = Pink80,
+    onTertiary = OnTertiaryContainer,
+    tertiaryContainer = TertiaryContainer,
+    onTertiaryContainer = Pink80,
+    error = Error,
+    errorContainer = ErrorContainer,
+    surface = SurfaceDark,
+    onSurface = androidx.compose.ui.graphics.Color.White,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = androidx.compose.ui.graphics.Color.LightGray,
+    outline = Outline,
+    outlineVariant = OutlineVariant,
+    surfaceDim = SurfaceDimDark,
+    surfaceBright = SurfaceBrightDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = Primary,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+    secondary = Secondary,
+    onSecondary = androidx.compose.ui.graphics.Color.White,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = OnSecondaryContainer,
+    tertiary = Tertiary,
+    onTertiary = androidx.compose.ui.graphics.Color.White,
+    tertiaryContainer = TertiaryContainer,
+    onTertiaryContainer = OnTertiaryContainer,
+    error = Error,
+    onError = androidx.compose.ui.graphics.Color.White,
+    errorContainer = ErrorContainer,
+    onErrorContainer = androidx.compose.ui.graphics.Color(0xFF410002),
+    background = Surface,
+    onBackground = androidx.compose.ui.graphics.Color(0xFF1C1B1F),
+    surface = Surface,
+    onSurface = androidx.compose.ui.graphics.Color(0xFF1C1B1F),
+    surfaceVariant = SurfaceVariant,
+    onSurfaceVariant = androidx.compose.ui.graphics.Color(0xFF49454F),
+    outline = Outline,
+    outlineVariant = OutlineVariant,
+    surfaceDim = SurfaceDim,
+    surfaceBright = SurfaceBright,
+    surfaceContainerLowest = SurfaceContainerLowest,
+    surfaceContainerLow = SurfaceContainerLow,
+    surfaceContainer = SurfaceContainer,
+    surfaceContainerHigh = SurfaceContainerHigh,
+    surfaceContainerHighest = SurfaceContainerHighest
 )
 
 @Composable
