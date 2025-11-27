@@ -197,3 +197,43 @@ com.msomu.androidkt/
 The project includes GitHub Actions workflows in `.github/workflows/`:
 - Automated build verification
 - Dependency updates via Dependabot
+
+## Pre-Commit Requirements
+
+**IMPORTANT:** Before committing any changes, you MUST run all PR checks and ensure they pass. This is mandatory for all code changes.
+
+### Required Checks Before Committing
+
+Run the following commands and ensure they all pass:
+
+```bash
+# 1. Run the full build (includes compilation checks)
+./gradlew build
+
+# 2. Run all unit tests
+./gradlew test
+
+# 3. Run Detekt static code analysis
+./gradlew detekt
+```
+
+Or run all checks with a single command:
+```bash
+./gradlew build test detekt
+```
+
+### Workflow
+
+1. Make your code changes
+2. Run all PR checks: `./gradlew build test detekt`
+3. Fix any failures (compilation errors, test failures, Detekt violations)
+4. Re-run checks until all pass
+5. Only then commit your changes
+
+### If Checks Fail
+
+- **Build failures**: Fix compilation errors before proceeding
+- **Test failures**: Update tests or fix the code causing failures
+- **Detekt violations**: Address code style/quality issues per `config/detekt/detekt.yml`
+
+Do NOT commit code that fails any of these checks.
