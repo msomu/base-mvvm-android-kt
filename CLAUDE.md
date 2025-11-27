@@ -19,7 +19,7 @@ This is a modern Android application template using MVVM architecture with 100% 
 **Build Requirements:**
 - Android Studio Hedgehog or later
 - JDK 17 (though project compiles with Java 11)
-- Android SDK with minimum API 24, target API 35
+- Android SDK with minimum API 24, target API 36
 
 ## Common Commands
 
@@ -190,7 +190,7 @@ com.msomu.androidkt/
 - **local.properties**: Local configuration (not committed, contains BASE_URL)
 - **app/build.gradle.kts**: App module build configuration
   - Namespace: `com.msomu.androidkt`
-  - Min SDK: 24, Target SDK: 35, Compile SDK: 35
+  - Min SDK: 24, Target SDK: 36, Compile SDK: 36
 
 ## CI/CD
 
