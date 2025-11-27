@@ -38,7 +38,7 @@ fun App() {
                         }
                     )
                 }
-                else -> NavEntry(route) { }
+                else -> error("Unknown route: $route")
             }
         }
     )
