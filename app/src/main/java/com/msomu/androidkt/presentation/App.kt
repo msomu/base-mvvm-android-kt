@@ -5,37 +5,40 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.msomu.androidkt.presentation.NavRoutes.DETAIL
-import com.msomu.androidkt.presentation.NavRoutes.HOME
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.ui.NavDisplay
 import com.msomu.androidkt.presentation.ui.screen.DetailScreen
 import com.msomu.androidkt.presentation.ui.screen.HomeScreen
 
 @Composable
 fun App() {
-    val navController = rememberNavController()
+    val navigator = rememberAppNavigator()
 
-    NavHost(navController = navController, startDestination = HOME) {
-        composable(HOME) {
-            HomeScreen(Modifier.fillMaxSize()) {
-                navController.navigate("$DETAIL/$it")
+    NavDisplay(
+        backStack = navigator.backStack,
+        onBack = { navigator.goBack() },
+        entryProvider = { route ->
+            when (route) {
+                is AppRoute.Home -> entry(route) {
+                    HomeScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onNavigateTodo = { todoItemId ->
+                            navigator.navigateTo(AppRoute.Detail(todoItemId))
+                        }
+                    )
+                }
+                is AppRoute.Detail -> entry(route) {
+                    DetailScreen(
+                        todoItemId = route.todoItemId,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        onNavigateBack = {
+                            navigator.goBack()
+                        }
+                    )
+                }
             }
         }
-        composable(
-            "$DETAIL/{todoItemId}",
-            arguments = listOf(navArgument("todoItemId") { type = NavType.IntType })
-        ) {
-            val todoItemId = it.arguments?.getInt("todoItemId")
-            requireNotNull(todoItemId) { "todoItemId parameter not found" }
-            DetailScreen(todoItemId, Modifier
-                .fillMaxSize()
-                .padding(16.dp)){
-                navController.popBackStack()
-            }
-        }
-    }
+    )
 }
