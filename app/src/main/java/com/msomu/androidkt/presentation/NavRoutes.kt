@@ -1,13 +1,12 @@
 package com.msomu.androidkt.presentation
 
-import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 /**
  * Type-safe navigation routes for Navigation 3.
- * Each route implements NavKey to enable persistent back stack functionality.
+ * Using sealed interface ensures exhaustive when expressions.
  */
-sealed interface AppRoute : NavKey {
+sealed interface AppRoute {
     @Serializable
     data object Home : AppRoute
 

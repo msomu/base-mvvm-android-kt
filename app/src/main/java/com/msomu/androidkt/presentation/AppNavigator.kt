@@ -1,16 +1,16 @@
 package com.msomu.androidkt.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.compose.runtime.snapshots.SnapshotStateList
 
 /**
  * Navigator class that handles navigation events for the app.
  * This class manages the back stack and provides navigation methods.
  */
 class AppNavigator(
-    val backStack: NavBackStack<AppRoute>
+    val backStack: SnapshotStateList<AppRoute>
 ) {
     fun navigateTo(route: AppRoute) {
         backStack.add(route)
@@ -30,7 +30,7 @@ class AppNavigator(
 fun rememberAppNavigator(
     startRoute: AppRoute = AppRoute.Home
 ): AppNavigator {
-    val backStack = rememberNavBackStack(startRoute)
+    val backStack = remember { mutableStateListOf<AppRoute>(startRoute) }
     return remember(backStack) {
         AppNavigator(backStack)
     }

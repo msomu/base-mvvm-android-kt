@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.msomu.androidkt.presentation.ui.screen.DetailScreen
 import com.msomu.androidkt.presentation.ui.screen.HomeScreen
@@ -19,7 +19,7 @@ fun App() {
         onBack = { navigator.goBack() },
         entryProvider = { route ->
             when (route) {
-                is AppRoute.Home -> entry(route) {
+                AppRoute.Home -> NavEntry(route) {
                     HomeScreen(
                         modifier = Modifier.fillMaxSize(),
                         onNavigateTodo = { todoItemId ->
@@ -27,7 +27,7 @@ fun App() {
                         }
                     )
                 }
-                is AppRoute.Detail -> entry(route) {
+                is AppRoute.Detail -> NavEntry(route) {
                     DetailScreen(
                         todoItemId = route.todoItemId,
                         modifier = Modifier
@@ -38,6 +38,7 @@ fun App() {
                         }
                     )
                 }
+                else -> NavEntry(route) { }
             }
         }
     )
