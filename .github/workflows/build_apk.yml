@@ -19,7 +19,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: "oracle"
+          distribution: "temurin"
           java-version: 17
 
       - name: Make Gradle executable
