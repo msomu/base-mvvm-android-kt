@@ -38,7 +38,6 @@ fun App() {
                         }
                     )
                 }
-                else -> error("Unknown route: $route")
             }
         }
     )
