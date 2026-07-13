@@ -16,7 +16,7 @@ detekt {
 
 android {
     namespace = "com.msomu.androidkt"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.msomu.androidkt"
