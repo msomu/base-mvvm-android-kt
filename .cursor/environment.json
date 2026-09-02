@@ -1,0 +1,4 @@
+{
+  "name": "BaseMVVM-AndroidKt",
+  "install": "bash .cursor/install.sh"
+}
