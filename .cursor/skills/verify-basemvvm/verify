@@ -1,0 +1,507 @@
+#!/usr/bin/env python3
+"""verify — leave a receipt. Fill CONFIG, then keep this file executable."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+# --- fill these ----------------------------------------------------------
+CONFIG = {
+    "app": "basemvvm",
+    "module": ":app",
+    "application_id": "com.msomu.androidkt",
+    "activity": "com.msomu.androidkt.MainActivity",
+    "test_task": ":app:testDebugUnitTest",
+    "assemble_task": ":app:assembleDebug",
+    "apk": "app/build/outputs/apk/debug/app-debug.apk",
+    "web_test": None,
+}
+# ------------------------------------------------------------------------
+
+HERE = Path(__file__).resolve().parent
+
+
+def find_repo(start: Path) -> Path:
+    for p in [start, *start.parents]:
+        if (p / "gradlew").exists() or (p / "package.json").exists():
+            return p
+    return start.parent
+
+
+REPO = find_repo(HERE)
+
+
+def utc_id() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def proof_dir(run_id: str) -> Path:
+    d = REPO / ".receipt" / "proof" / run_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def emit(payload: dict, code: int = 0) -> None:
+    json.dump(payload, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+    raise SystemExit(code)
+
+
+def which(name: str) -> str | None:
+    return shutil.which(name)
+
+
+def fix_java_env() -> str | None:
+    home = os.environ.get("JAVA_HOME")
+    if home and (Path(home) / "bin" / "java").exists():
+        return home
+    locator = Path("/usr/libexec/java_home")
+    if locator.exists():
+        proc = subprocess.run([str(locator)], capture_output=True, text=True)
+        if proc.returncode == 0 and proc.stdout.strip():
+            resolved = proc.stdout.strip()
+            os.environ["JAVA_HOME"] = resolved
+            return resolved
+    os.environ.pop("JAVA_HOME", None)
+    return None
+
+
+def run(cmd: list[str], cwd: Path | None = None, dry: bool = False) -> dict:
+    step = {"cmd": cmd, "cwd": str(cwd or REPO), "exit": None, "stdout": "", "stderr": ""}
+    if dry:
+        step["exit"] = "dry-run"
+        return step
+    proc = subprocess.run(cmd, cwd=cwd or REPO, text=True, capture_output=True)
+    step["exit"] = proc.returncode
+    step["stdout"] = proc.stdout[-8000:]
+    step["stderr"] = proc.stderr[-8000:]
+    return step
+
+
+def resolve_device(requested: str | None, dry: bool) -> tuple[str | None, bool, list[dict]]:
+    """Return (serial, leased, steps). leased=True means we must release."""
+    steps: list[dict] = []
+    harbor = which("adbharbor")
+    pinned = requested or os.environ.get("ANDROID_SERIAL")
+    if pinned and harbor:
+        step = run([harbor, "acquire", "-s", pinned, "--ttl", "15m"], dry=dry)
+        steps.append(step)
+        if dry or step["exit"] == 0:
+            return pinned, True, steps
+        return None, False, steps
+    if pinned:
+        return pinned, False, steps
+    if harbor:
+        for extra in (["--any", "--emulator"], ["--any"]):
+            cmd = [harbor, "acquire", *extra, "--ttl", "15m"]
+            step = run(cmd, dry=dry)
+            steps.append(step)
+            if dry:
+                return "<lease>", True, steps
+            if step["exit"] == 0:
+                serial = (step["stdout"] or "").strip().splitlines()[-1].strip()
+                if serial:
+                    return serial, True, steps
+            if step["exit"] == 75:
+                break
+        return None, False, steps
+    adb = which("adb")
+    if not adb:
+        return None, False, steps
+    step = run([adb, "devices"], dry=dry)
+    steps.append(step)
+    if dry:
+        return "<adb-devices>", False, steps
+    for line in (step["stdout"] or "").splitlines()[1:]:
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == "device":
+            return parts[0], False, steps
+    return None, False, steps
+
+
+def release(serial: str | None, leased: bool, dry: bool) -> dict | None:
+    if not leased or not serial or serial.startswith("<"):
+        return None
+    harbor = which("adbharbor")
+    if not harbor:
+        return None
+    # never --force
+    return run([harbor, "release", "-s", serial], dry=dry)
+
+
+def adb(serial: str, *args: str) -> list[str]:
+    exe = which("adb") or "adb"
+    return [exe, "-s", serial, *args]
+
+
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
+def is_png(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    return path.read_bytes()[:8] == PNG_MAGIC
+
+
+def use_harbor_submit(serial: str | None, harbor: str | None) -> bool:
+    return serial is None and bool(harbor)
+
+
+def harbor_dir() -> Path:
+    raw = os.environ.get("ADBHARBOR_DIR")
+    return Path(raw) if raw else Path.home() / ".adbharbor"
+
+
+def submit_cmd() -> list[str]:
+    harbor = which("adbharbor") or "adbharbor"
+    return [
+        harbor,
+        "submit",
+        "--apk",
+        str(REPO / CONFIG["apk"]),
+        "--package",
+        CONFIG["application_id"],
+        "--activity",
+        CONFIG["activity"],
+    ]
+
+
+def valid_run_id(rid: str) -> bool:
+    if not rid or len(rid) > 64 or "/" in rid or ".." in rid:
+        return False
+    return all(c.isalnum() or c in "-_" for c in rid)
+
+
+def parse_run_id(stdout: str) -> str | None:
+    text = (stdout or "").strip()
+    if not text:
+        return None
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict):
+            rid = data.get("run_id") or data.get("id")
+            if rid and valid_run_id(str(rid)):
+                return str(rid)
+    except json.JSONDecodeError:
+        pass
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[0] == "run" and valid_run_id(parts[1]):
+            return parts[1]
+    return None
+
+
+def take_run_proof(run_id: str, dest: Path) -> dict:
+    src = harbor_dir() / "runs" / run_id
+    copied: dict = {"run": str(src), "png": None, "logcat": None}
+    if not src.is_dir():
+        return copied
+    png = next((src / n for n in ("screen.png", "screenshot.png") if (src / n).is_file()), None)
+    if png is None:
+        pngs = sorted(src.glob("*.png"))
+        png = pngs[0] if pngs else None
+    if png is not None:
+        dest_png = dest / "screen.png"
+        shutil.copy2(png, dest_png)
+        copied["png"] = str(dest_png)
+    log = src / "logcat.txt"
+    if log.is_file():
+        dest_log = dest / "logcat.txt"
+        shutil.copy2(log, dest_log)
+        copied["logcat"] = str(dest_log)
+    return copied
+
+
+def cmd_harbor_run(command: str, dest: Path, dry: bool, extra: dict | None = None) -> None:
+    apk = REPO / CONFIG["apk"]
+    steps: list[dict] = []
+    if not dry and not apk.is_file():
+        emit(
+            {
+                "ok": False,
+                "command": command,
+                "error": "apk missing; run assemble first",
+                "via": "harbor-submit",
+                "steps": [{"cmd": ["assemble", str(apk)], "exit": 1, "stderr": "apk missing"}],
+            },
+            1,
+        )
+    # adbharbor submit is blocking (executeRun, then print).
+    step = run(submit_cmd(), dry=dry)
+    steps.append(step)
+    copied = {"run": None, "png": None, "logcat": None}
+    if not dry and step.get("exit") == 0:
+        rid = parse_run_id(step.get("stdout") or "")
+        if rid:
+            copied = take_run_proof(rid, dest)
+            steps.append({"cmd": ["copy-proof", rid], "exit": 0, "stdout": json.dumps(copied)})
+        else:
+            steps.append({"cmd": ["copy-proof"], "exit": 1, "stderr": "no run id from adbharbor submit"})
+    png = dest / "screen.png"
+    if command == "logcat":
+        ok = dry or (steps_ok(steps) and bool(copied.get("logcat")))
+    else:
+        ok = dry or (steps_ok(steps) and is_png(png))
+    payload = {
+        "ok": ok,
+        "command": command,
+        "dry_run": dry,
+        "via": "harbor-submit",
+        "device": None,
+        "proof": str(dest),
+        "steps": steps,
+    }
+    if extra:
+        payload.update(extra)
+    emit(payload, 0 if ok else 1)
+
+
+def steps_ok(steps: list[dict]) -> bool:
+    return all(s.get("exit") in (0, "dry-run") for s in steps)
+
+
+def list_serial(requested: str | None, dry: bool) -> tuple[str | None, list[dict]]:
+    """Read-only device discovery. Never acquires a lease."""
+    if requested:
+        return requested, []
+    env = os.environ.get("ANDROID_SERIAL")
+    if env:
+        return env, []
+    harbor = which("adbharbor")
+    if harbor:
+        step = run([harbor, "devices"], dry=dry)
+        if dry:
+            return "<adbharbor-devices>", [step]
+        for line in (step["stdout"] or "").splitlines()[1:]:
+            parts = line.split()
+            if len(parts) >= 2 and parts[1] == "device":
+                return parts[0], [step]
+        return None, [step]
+    adb_bin = which("adb")
+    if not adb_bin:
+        return None, []
+    step = run([adb_bin, "devices"], dry=dry)
+    if dry:
+        return "<adb-devices>", [step]
+    for line in (step["stdout"] or "").splitlines()[1:]:
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == "device":
+            return parts[0], [step]
+    return None, [step]
+
+
+def cmd_doctor(args: argparse.Namespace, dry: bool) -> None:
+    checks = {
+        "java": which("java"),
+        "java_home": fix_java_env(),
+        "adb": which("adb"),
+        "adbharbor": which("adbharbor"),
+        "gradlew": str(REPO / "gradlew") if (REPO / "gradlew").exists() else None,
+        "android_home": os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT"),
+    }
+    serial, steps = list_serial(args.device, dry)
+    ok = bool(checks["java"] and checks["adb"] and checks["gradlew"])
+    emit(
+        {
+            "ok": ok,
+            "command": "doctor",
+            "dry_run": dry,
+            "app": CONFIG["app"],
+            "device": serial,
+            "checks": checks,
+            "steps": steps,
+        },
+        0 if ok else 1,
+    )
+
+
+def cmd_gradle(task_key: str, args: argparse.Namespace, dry: bool) -> None:
+    fix_java_env()
+    run_id = utc_id()
+    dest = proof_dir(run_id)
+    wrapper = REPO / "gradlew"
+    task = CONFIG[task_key]
+    cmd = [str(wrapper), task, "--rerun-tasks"]
+    step = run(cmd, dry=dry)
+    out = dest / f"{task_key}.log"
+    if not dry:
+        out.write_text((step.get("stdout") or "") + "\n" + (step.get("stderr") or ""))
+        results = REPO / "app" / "build" / "test-results"
+        if results.exists():
+            shutil.copytree(results, dest / "test-results", dirs_exist_ok=True)
+    ok = step["exit"] == 0 or step["exit"] == "dry-run"
+    emit(
+        {
+            "ok": ok,
+            "command": "test" if task_key == "test_task" else "assemble",
+            "dry_run": dry,
+            "head_note": "record git rev-parse HEAD in the same shell",
+            "proof": str(dest),
+            "steps": [step],
+        },
+        0 if ok else 1,
+    )
+
+
+def cmd_screenshot(args: argparse.Namespace, dry: bool) -> None:
+    """Capture the current screen. Does not reinstall or relaunch unless asked."""
+    run_id = utc_id()
+    dest = proof_dir(run_id)
+    png = dest / "screen.png"
+    serial, leased, steps = resolve_device(args.device, dry)
+    if not serial:
+        if use_harbor_submit(serial, which("adbharbor")):
+            cmd_harbor_run(
+                "screenshot",
+                dest,
+                dry,
+                extra={"install": True, "launch": True},
+            )
+        emit({"ok": False, "command": "screenshot", "error": "no device", "steps": steps}, 1)
+    try:
+        if args.install:
+            apk = REPO / CONFIG["apk"]
+            if not dry and not apk.is_file():
+                steps.append({"cmd": ["install", str(apk)], "exit": 1, "stderr": "apk missing"})
+            else:
+                steps.append(run(adb(serial, "install", "-r", str(apk)), dry=dry))
+        if args.launch:
+            steps.append(
+                run(
+                    adb(
+                        serial,
+                        "shell",
+                        "am",
+                        "start",
+                        "-n",
+                        f"{CONFIG['application_id']}/{CONFIG['activity']}",
+                    ),
+                    dry=dry,
+                )
+            )
+            if not dry:
+                time.sleep(2)
+        cap = adb(serial, "exec-out", "screencap", "-p")
+        if dry:
+            steps.append({"cmd": cap, "exit": "dry-run", "stdout": "", "stderr": ""})
+        else:
+            raw = subprocess.run(cap, capture_output=True)
+            png.write_bytes(raw.stdout)
+            steps.append(
+                {
+                    "cmd": cap,
+                    "exit": raw.returncode,
+                    "stdout": f"wrote {png} ({len(raw.stdout)} bytes) png={is_png(png)}",
+                    "stderr": "",
+                }
+            )
+    finally:
+        rel = release(serial, leased, dry)
+        if rel:
+            steps.append(rel)
+    ok = dry or (steps_ok(steps) and is_png(png))
+    emit(
+        {
+            "ok": ok,
+            "command": "screenshot",
+            "dry_run": dry,
+            "device": serial,
+            "install": bool(args.install),
+            "launch": bool(args.launch),
+            "proof": str(dest),
+            "steps": steps,
+        },
+        0 if ok else 1,
+    )
+
+
+def cmd_logcat(args: argparse.Namespace, dry: bool) -> None:
+    run_id = utc_id()
+    dest = proof_dir(run_id)
+    serial, leased, steps = resolve_device(args.device, dry)
+    if not serial:
+        if use_harbor_submit(serial, which("adbharbor")):
+            cmd_harbor_run("logcat", dest, dry)
+        emit({"ok": False, "command": "logcat", "error": "no device", "steps": steps}, 1)
+    pkg = CONFIG["application_id"]
+    try:
+        pid_step = run(adb(serial, "shell", "pidof", "-s", pkg), dry=dry)
+        steps.append(pid_step)
+        raw_pid = (pid_step.get("stdout") or "").strip().split()
+        pid = "<pid>" if dry else (raw_pid[0] if raw_pid else "")
+        if dry:
+            steps.append(
+                {
+                    "cmd": adb(serial, "logcat", "-d", "-t", str(args.lines), "--pid", "<pid>"),
+                    "exit": "dry-run",
+                    "stdout": "",
+                    "stderr": "",
+                }
+            )
+        elif pid_step.get("exit") != 0 or not pid:
+            steps.append({"cmd": ["pidof", pkg], "exit": 1, "stderr": f"{pkg} not running"})
+        else:
+            step = run(adb(serial, "logcat", "-d", "-t", str(args.lines), "--pid", pid), dry=False)
+            steps.append(step)
+            (dest / "logcat.txt").write_text(step.get("stdout") or "")
+    finally:
+        rel = release(serial, leased, dry)
+        if rel:
+            steps.append(rel)
+    ok = dry or steps_ok(steps)
+    emit(
+        {
+            "ok": ok,
+            "command": "logcat",
+            "dry_run": dry,
+            "device": serial,
+            "package": pkg,
+            "proof": str(dest),
+            "steps": steps,
+        },
+        0 if ok else 1,
+    )
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(
+        prog="verify",
+        description="Leave a receipt. JSON on stdout. Proof files survive cleanup.",
+    )
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--device", help="Pin this serial. Overrides ANDROID_SERIAL and AdbHarbor.")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("doctor")
+    sub.add_parser("test")
+    sub.add_parser("assemble")
+    ss = sub.add_parser("screenshot")
+    ss.add_argument("--install", action="store_true", help="Install the debug APK before capture. Off by default.")
+    ss.add_argument("--launch", action="store_true", help="Start the activity before capture. Off by default.")
+    lg = sub.add_parser("logcat")
+    lg.add_argument("--lines", type=int, default=200)
+    args = p.parse_args()
+    dry = args.dry_run
+    if args.cmd == "doctor":
+        cmd_doctor(args, dry)
+    elif args.cmd == "test":
+        cmd_gradle("test_task", args, dry)
+    elif args.cmd == "assemble":
+        cmd_gradle("assemble_task", args, dry)
+    elif args.cmd == "screenshot":
+        cmd_screenshot(args, dry)
+    elif args.cmd == "logcat":
+        cmd_logcat(args, dry)
+    else:
+        p.error(args.cmd)
+
+
+if __name__ == "__main__":
+    main()
