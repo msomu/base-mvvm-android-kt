@@ -14,4 +14,4 @@ data class TodoItem(
 )
 
 val TodoItem.ownerLabel: String
-    get() = "User $userId"
+    get() = "User #$userId"
