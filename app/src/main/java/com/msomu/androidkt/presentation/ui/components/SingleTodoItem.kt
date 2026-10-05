@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.msomu.androidkt.model.TodoItem
+import com.msomu.androidkt.model.ownerLabel
 import com.msomu.androidkt.presentation.ui.animation.AnimationSpecs
 
 @Composable
@@ -132,7 +133,7 @@ fun SingleTodoItem(
                 )
 
                 Text(
-                    text = "User #${todoItem.userId}",
+                    text = todoItem.ownerLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
