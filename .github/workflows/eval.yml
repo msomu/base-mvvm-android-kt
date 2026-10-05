@@ -1,0 +1,27 @@
+name: Golden-set eval
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    name: eval (replay)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Unit-test the scorer
+        run: python3 -m unittest discover -s evals -p 'test_*.py' -v
+
+      - name: Score recorded model outputs against the golden set
+        run: python3 evals/run.py

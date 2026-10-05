@@ -1,0 +1,13 @@
+{"_meta": {"recorded_at": "2026-10-05T13:26:18+00:00", "command": "cursor-agent -p --mode ask --trust --model gemini-3.7-flash-high", "policy": "RISK_TIERS.md", "golden": "golden.jsonl"}}
+{"id": "pr-153-gradle-wrapper", "raw": "blast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "pr-152-ksp", "raw": "The file `gradle/libs.versions.toml` matches the `gradle/**` path rule for version catalogs and wrapper dependencies, which is classified under the `blast-radius` tier.\n\nblast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "pr-122-ci-keystore", "raw": "The file `.github/workflows/build_apk.yml` falls under `.github/**`, which is classified under the `blast-radius` tier.\n\nblast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "pr-103-claude-md", "raw": "Based on the risk policy, `CLAUDE.md` is explicitly listed under the `blast-radius` tier as it changes the rules agents follow.\n\nblast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "pr-159-verify-cli", "raw": "The changed files include items matching `.cursor/skills/**` and `verify`, which are defined under the verification harness in the `owned` tier. No changed files fall under the `blast-radius` tier.\n\nowned", "predicted": "owned", "exit": 0}
+{"id": "pr-128-chore-upgrade", "raw": "Based on the risk policy, this pull request touches files classified under `blast-radius` (including `build.gradle.kts`, `app/build.gradle.kts`, `gradle/**`, and `gradlew`). Since every PR is assigned the highest tier of any file it touches:\n\nblast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "syn-readme-typo", "raw": "low", "predicted": "low", "exit": 0}
+{"id": "syn-unit-test-only", "raw": "low", "predicted": "low", "exit": 0}
+{"id": "syn-detail-edit", "raw": "", "predicted": null, "exit": 1}
+{"id": "syn-home-strings", "raw": "", "predicted": null, "exit": 1}
+{"id": "syn-network-timeout", "raw": "The changed file `app/src/main/java/com/msomu/androidkt/di/NetworkModule.kt` falls under `app/src/main/java/com/msomu/androidkt/di/**`, which is explicitly categorized under `blast-radius`.\n\nblast-radius", "predicted": "blast-radius", "exit": 0}
+{"id": "syn-cache-with-test", "raw": "The file `app/src/main/java/com/msomu/androidkt/repository/RepositoryImpl.kt` falls under `app/src/main/java/com/msomu/androidkt/repository/**`, which is classified as `blast-radius`. Since a pull request takes the highest tier among the files it touches, the PR is assigned to this tier.\n\nblast-radius", "predicted": "blast-radius", "exit": 0}

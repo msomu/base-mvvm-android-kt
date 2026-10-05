@@ -1,0 +1,18 @@
+# blast-radius paths from RISK_TIERS.md. Keep both files in step.
+/build.gradle.kts                               @msomu
+/app/build.gradle.kts                           @msomu
+/settings.gradle.kts                            @msomu
+/gradle.properties                              @msomu
+/gradle/                                        @msomu
+/gradlew                                        @msomu
+/gradlew.bat                                    @msomu
+/.github/                                       @msomu
+/config/detekt/                                 @msomu
+/app/proguard-rules.pro                         @msomu
+/app/src/main/AndroidManifest.xml               @msomu
+/app/src/main/java/com/msomu/androidkt/di/          @msomu
+/app/src/main/java/com/msomu/androidkt/network/     @msomu
+/app/src/main/java/com/msomu/androidkt/repository/  @msomu
+/AGENTS.md                                      @msomu
+/CLAUDE.md                                      @msomu
+/RISK_TIERS.md                                  @msomu
