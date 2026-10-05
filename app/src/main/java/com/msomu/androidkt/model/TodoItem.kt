@@ -12,3 +12,6 @@ data class TodoItem(
     val userId: Int,
     val userImage : String? = "https://i.pravatar.cc/300"
 )
+
+val TodoItem.ownerLabel: String
+    get() = "User $userId"
