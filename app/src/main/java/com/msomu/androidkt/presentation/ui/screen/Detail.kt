@@ -48,6 +48,7 @@ import com.msomu.androidkt.model.TodoItem
 import com.msomu.androidkt.presentation.ui.animation.CardAnimation
 import com.msomu.androidkt.presentation.ui.animation.AnimationSpecs
 import com.msomu.androidkt.presentation.ui.components.ShimmerCircleImage
+import com.msomu.androidkt.presentation.ui.components.TodoOwnerLabel
 import com.msomu.androidkt.presentation.viewmodel.DetailUiState
 import com.msomu.androidkt.presentation.viewmodel.DetailViewModel
 import kotlinx.coroutines.delay
@@ -197,11 +198,16 @@ private fun TodoHeaderContent(todo: TodoItem) {
             modifier = Modifier
                 .size(56.dp)
         )
-        Text(
-            text = todo.title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.weight(1f)
-        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = todo.title,
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            TodoOwnerLabel(userId = todo.userId)
+        }
         Checkbox(
             checked = todo.completed,
             onCheckedChange = { }
