@@ -74,12 +74,17 @@ def fix_java_env() -> str | None:
     return None
 
 
-def run(cmd: list[str], cwd: Path | None = None, dry: bool = False) -> dict:
+def run(cmd: list[str], cwd: Path | None = None, dry: bool = False, timeout: float | None = None) -> dict:
     step = {"cmd": cmd, "cwd": str(cwd or REPO), "exit": None, "stdout": "", "stderr": ""}
     if dry:
         step["exit"] = "dry-run"
         return step
-    proc = subprocess.run(cmd, cwd=cwd or REPO, text=True, capture_output=True)
+    try:
+        proc = subprocess.run(cmd, cwd=cwd or REPO, text=True, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        step["exit"] = "timeout"
+        step["stderr"] = f"no result after {timeout:.0f}s"
+        return step
     step["exit"] = proc.returncode
     step["stdout"] = proc.stdout[-8000:]
     step["stderr"] = proc.stderr[-8000:]
@@ -92,7 +97,22 @@ def resolve_device(requested: str | None, dry: bool) -> tuple[str | None, bool, 
     harbor = which("adbharbor")
     pinned = requested or os.environ.get("ANDROID_SERIAL")
     if pinned and harbor:
-        step = run([harbor, "acquire", "-s", pinned, "--ttl", "15m"], dry=dry)
+        if not dry:
+            # adbharbor acquire queues without limit behind another session, and a killed
+            # waiter leaves a queue ticket that is later granted the device. Check first.
+            who = run([harbor, "who", "-s", pinned])
+            steps.append(who)
+            holder = (who["stdout"] or "").strip()
+            session = os.environ.get("ADB_HARBOR_SESSION")
+            if session and f"(session {session})" in holder:
+                return pinned, False, steps  # caller's lease: reuse it, leave it held
+            if "is held by" in holder:
+                who["exit"] = 1
+                who["stderr"] = "device leased by another session; release that lease, " \
+                    "or export ADB_HARBOR_SESSION=<holder session> to reuse it"
+                return None, False, steps
+        wait = float(os.environ.get("VERIFY_LEASE_TIMEOUT", "120"))
+        step = run([harbor, "acquire", "-s", pinned, "--ttl", "15m"], dry=dry, timeout=wait)
         steps.append(step)
         if dry or step["exit"] == 0:
             return pinned, True, steps
@@ -151,8 +171,10 @@ def is_png(path: Path) -> bool:
     return path.read_bytes()[:8] == PNG_MAGIC
 
 
-def use_harbor_submit(serial: str | None, harbor: str | None) -> bool:
-    return serial is None and bool(harbor)
+def use_harbor_submit(serial: str | None, harbor: str | None, requested: str | None) -> bool:
+    # A pinned device that could not be leased must fail, never fall back to "any free device".
+    pinned = requested or os.environ.get("ANDROID_SERIAL")
+    return serial is None and bool(harbor) and not pinned
 
 
 def harbor_dir() -> Path:
@@ -358,7 +380,7 @@ def cmd_screenshot(args: argparse.Namespace, dry: bool) -> None:
     png = dest / "screen.png"
     serial, leased, steps = resolve_device(args.device, dry)
     if not serial:
-        if use_harbor_submit(serial, which("adbharbor")):
+        if use_harbor_submit(serial, which("adbharbor"), args.device):
             cmd_harbor_run(
                 "screenshot",
                 dest,
@@ -428,7 +450,7 @@ def cmd_logcat(args: argparse.Namespace, dry: bool) -> None:
     dest = proof_dir(run_id)
     serial, leased, steps = resolve_device(args.device, dry)
     if not serial:
-        if use_harbor_submit(serial, which("adbharbor")):
+        if use_harbor_submit(serial, which("adbharbor"), args.device):
             cmd_harbor_run("logcat", dest, dry)
         emit({"ok": False, "command": "logcat", "error": "no device", "steps": steps}, 1)
     pkg = CONFIG["application_id"]

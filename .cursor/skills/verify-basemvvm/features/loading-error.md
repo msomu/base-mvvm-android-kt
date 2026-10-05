@@ -20,7 +20,7 @@ Preconditions: decide whether you want the error path. Default jsonplaceholder r
 
 - **Load.** Cold launch, dump immediately. Six skeleton rows, no `delectus aut autem`.
 - **Success.** Wait. Heading still `Todo List`. Real titles replace the skeleton.
-- **Error.** Point `BASE_URL` in `local.properties` at a closed port, delete the process so the 5-minute cache is gone, relaunch. Centered error text, not a list.
+- **Error.** Point `BASE_URL` in `local.properties` to an unreachable HTTPS port (e.g. `BASE_URL=https://127.0.0.1:9/` — HTTPS is required because Android network security policy blocks cleartext HTTP), force-stop the app process to clear the 5-minute cache, relaunch. Centered error text (`Failed to connect to /127.0.0.1:9`), not a list.
 - **Proof.** `./verify screenshot` on the state you claimed.
 
 ## What usually lies
