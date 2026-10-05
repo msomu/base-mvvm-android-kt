@@ -6,7 +6,7 @@ Tapping a Home row opens `Todo Details` for that `todoItemId`. Close returns to 
 
 - `detail-title` is the top bar `Todo Details`.
 - `detail-load` calls `GET /todos/{id}` from `DetailViewModel.fetchTodo`.
-- `detail-header` shows `todo.title`, a status chip (`Completed` or `Active`), and a display-only checkbox.
+- `detail-header` shows `todo.title`, `User #<userId>` under the title (same label as Home via `TodoOwnerLabel`), a status chip (`Completed` or `Active`), and a display-only checkbox.
 - `detail-back` is the Close icon, contentDescription `Back`.
 - `detail-edit` is the Edit icon, contentDescription `Edit Todo`. It is a no-op.
 
@@ -19,7 +19,8 @@ Tapping a Home row opens `Todo Details` for that `todoItemId`. Close returns to 
 
 Preconditions: Home has loaded at least one row.
 
-- **Open.** Tap `delectus aut autem`. Heading `Todo Details`. Title text matches the row.
+- **Open.** Tap `delectus aut autem`. Heading `Todo Details`. Title text matches the row. Body shows `User #1` under the title (jsonplaceholder todo id 1).
+- **Owner label.** After Success, assert visible text `User #1` on Detail for todo id 1; it must match Home’s `User #<id>` formatting.
 - **Chip.** Incomplete todos show `Active`. Completed show `Completed`.
 - **Back.** Tap `Back`. Heading `Todo List` again. Same rows (5-minute list cache).
 - **Proof.** `./verify screenshot` on Detail before Back.

@@ -131,11 +131,7 @@ fun SingleTodoItem(
                         MaterialTheme.colorScheme.onSurface
                 )
 
-                Text(
-                    text = "User #${todoItem.userId}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+                TodoOwnerLabel(userId = todoItem.userId)
             }
         }
     }
